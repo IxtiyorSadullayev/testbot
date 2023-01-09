@@ -10,7 +10,7 @@ bot.use(session())
 bot.use(stage.middleware())
 bot.use(new Scenes.Stage([kiritish, ism]))
 mongoose.set("strictQuery", false);
-mongoose.connect('mongodb://localhost/testbotdbcha')
+mongoose.connect('mongodb+srv://ixtiyor99:ixtiyor99@cluster0.mpzth.mongodb.net/?retryWrites=true&w=majority')
     .then(() => console.log("Bazaga bog'landi"))
     .catch(e => console.log("hatolik bor \n", e.message))
 bot.start(msg => {
