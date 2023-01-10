@@ -1,26 +1,38 @@
 const { Telegraf, Scenes, session, Markup } = require('telegraf');
 const mongoose = require('mongoose');
-const CalbackModel = require('./models/CallbackQuery')
+const CalbackModel = require('./models/CallbackQuery');
+const FaylQuery = require("./models/FaylQuery");
 const { kiritish, ism } = require('./scanes/taklif');
 const { sortabel } = require('./data');
+const { rasmWizard } = require('./scanes/rasmli');
+const { videoWizard } = require('./scanes/videoli');
 const Stage = Scenes.Stage;
 const stage = new Stage();
 const bot = new Telegraf('1971156264:AAF2LN5FxIt1430Js2v232ShZy8aNFGLkW8')
 bot.use(session())
 bot.use(stage.middleware())
-bot.use(new Scenes.Stage([kiritish, ism]))
+bot.use(new Scenes.Stage([kiritish, ism, rasmWizard, videoWizard]))
 mongoose.set("strictQuery", false);
 mongoose.connect('mongodb+srv://ixtiyor99:ixtiyor99@cluster0.mpzth.mongodb.net/?retryWrites=true&w=majority')
     .then(() => console.log("Bazaga bog'landi"))
     .catch(e => console.log("hatolik bor \n", e.message))
 bot.start(msg => {
-    // console.log(msg)
-    // console.log(msg.message.entities)
-    msg.reply('Assalomu aleykum Hurmatli mijoz. Botimizdan foydalanish uchun kerakli buyruqlarni togri amalga oshiring.')
-    msg.scene.enter('kiritish')
+    // msg.reply('Assalomu aleykum Hurmatli mijoz. Botimizdan foydalanish uchun kerakli buyruqlarni togri amalga oshiring.')
+    msg.reply('Bu yerda botning start message qismi boladi. Shuni tayorlash kerak.', Markup.keyboard([
+        ["Rasimli kontent", "Videoli kontent"]
+    ]).resize().oneTime())
+    // msg.scene.enter('kiritish')
 })
 
+bot.hears('Rasimli kontent', async msg => {
+    await msg.reply("Rasmingizni yuboring.")
+    msg.scene.enter('rasmlar')
+})
 
+bot.hears("Videoli kontent", async msg => {
+    await msg.reply("Videoingizni yuboring.")
+    msg.scene.enter('videolar')
+})
 
 // status 
 /*
@@ -47,31 +59,29 @@ bot.hears('kanal', msg => {
 
 
 bot.on("callback_query", async msg => {
-    const message = msg.callbackQuery.message.text;
+    const message = msg.callbackQuery.message.caption;
     const bosilganelement = msg.callbackQuery.data;
     const id = msg.from.id;
-
-    const userslist = await CalbackModel.findOne({ message: message });
-
+    const userslist = await FaylQuery.findOne({ message: message })
     const channe = await bot.telegram.getChatMember(-1001507216679, msg.from.id)
-    if(channe.status == "left"){
+    if (channe.status == "left") {
         return await msg.answerCbQuery("Siz ovoz berishda qatnasha olmaysiz sababi siz bu kanalga obuna bo'lmagansiz.")
-    }   
+    }
 
     const idbosdimi = userslist.users.filter(data => data.user == id);
     if (idbosdimi.length == 1) {
         return await msg.answerCbQuery('Siz royhatda ishtirok etgansiz.')
     } else {
-        await CalbackModel.findOneAndUpdate({ message: message }, { $push: { users: { user: id, text: bosilganelement } } })
-        const yangiruyhat = await CalbackModel.findOne({message: message});
-        console.log("yangilangan royhat", yangiruyhat.users);
+        await FaylQuery.findOneAndUpdate({ message: message }, { $push: { users: { user: id, text: bosilganelement } } })
+        const yangiruyhat = await FaylQuery.findOne({ message: message });
         const sortlanganuserlar = sortabel(yangiruyhat.users, yangiruyhat.data);
-        console.log("Sortlangan ro'yxat", sortlanganuserlar);
-        await msg.editMessageText(yangiruyhat.message, Markup.inlineKeyboard([
-            ...sortlanganuserlar.map(user =>{
+
+        await msg.editMessageCaption(yangiruyhat.message, Markup.inlineKeyboard([
+            ...sortlanganuserlar.map(user => {
                 return [Markup.button.callback(user.text + " " + user.count, user.text)];
             })
-        ]));
+        ]))
+
         return await msg.answerCbQuery("Ro'yxatda ishtirok etganingiz uchun katta rahmat.")
     }
 
