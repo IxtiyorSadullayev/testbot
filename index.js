@@ -13,7 +13,7 @@ bot.use(session())
 bot.use(stage.middleware())
 bot.use(new Scenes.Stage([kiritish, ism, rasmWizard, videoWizard]))
 mongoose.set("strictQuery", false);
-mongoose.connect('mongodb+srv://ixtiyor99:ixtiyor99@cluster0.mpzth.mongodb.net/?retryWrites=true&w=majority')
+mongoose.connect('mongodb://15a.mongo.evennode.com:27019,15b.mongo.evennode.com:27019/9362e7daea6ea7818bd33f769f34f044?replicaSet=eu-15')
     .then(() => console.log("Bazaga bog'landi"))
     .catch(e => console.log("hatolik bor \n", e.message))
 bot.start(msg => {
